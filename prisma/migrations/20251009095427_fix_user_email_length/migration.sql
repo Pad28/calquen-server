@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "public"."user" ALTER COLUMN "email" SET DATA TYPE VARCHAR(255),
+ALTER COLUMN "password" SET DATA TYPE VARCHAR(255);

@@ -1,0 +1,296 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model bank {
+    id         String   @id @default(uuid()) @db.Uuid
+    name       String   @unique @db.VarChar(255)
+    code       String   @unique @map("code ") @db.VarChar(255)
+    created_at DateTime @default(now()) @db.Timestamp(6)
+    updated_at DateTime @updatedAt @db.Timestamp(6)
+    is_active  Boolean
+
+    @@index([is_active])
+}
+
+model client_request {
+    id              String                @id @default(uuid()) @db.Uuid
+    company_id      String                @default(uuid()) @db.Uuid
+    user_id         String                @default(uuid()) @db.Uuid
+    request_type_id String                @default(uuid()) @db.Uuid
+    subject         String                @db.VarChar(255)
+    message         String
+    status          CLIENT_REQUEST_STATUS @default(PENDING)
+    created_at      DateTime              @default(now()) @db.Timestamp(6)
+    updated_at      DateTime              @updatedAt @db.Timestamp(6)
+    company         company               @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    request_type    request_type          @relation(fields: [request_type_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    user            user                  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    @@index([company_id])
+    @@index([user_id])
+    @@index([request_type_id])
+    @@index([status])
+    @@index([created_at])
+    @@index([company_id, status])
+    @@index([user_id, status])
+}
+
+enum CLIENT_REQUEST_STATUS {
+    PENDING
+    APPROVED
+    REJECTED
+}
+
+model company {
+    id                String              @id @default(uuid()) @db.Uuid
+    name              String              @db.VarChar(255)
+    business_sector   String              @db.VarChar(255)
+    url               String              @db.VarChar(255)
+    billing_frequency String              @db.VarChar(255)
+    is_active         Boolean             @default(true)
+    created_at        DateTime            @default(now()) @db.Timestamp(6)
+    updated_at        DateTime            @updatedAt @db.Timestamp(6)
+    client_request    client_request[]
+    company_employee  company_employee[]
+    employee_requests employee_requests[]
+    rh_document       rh_document[]
+
+    @@index([business_sector])
+    @@index([is_active])
+    @@index([created_at])
+    @@index([business_sector, is_active])
+}
+
+model company_employee {
+    id          String   @id @default(uuid()) @db.Uuid
+    company_id  String   @default(uuid()) @db.Uuid
+    employee_id String   @default(uuid()) @db.Uuid
+    created_at  DateTime @default(now()) @db.Timestamp(6)
+    updated_at  DateTime @updatedAt @db.Timestamp(6)
+    company     company  @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    employee    employee @relation(fields: [employee_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    @@unique([company_id, employee_id])
+    @@index([company_id])
+    @@index([employee_id])
+}
+
+model document_category {
+    id         String   @id @default(uuid()) @db.Uuid
+    name       String   @db.VarChar(255)
+    is_active  Boolean  @default(true)
+    created_at DateTime @default(now()) @db.Timestamp(6)
+    updated_at DateTime @updatedAt @db.Timestamp(6)
+
+    @@index([is_active])
+    @@index([name])
+    @@index([created_at])
+}
+
+model employee {
+    id                String              @id @default(uuid()) @db.Uuid
+    company_id        String              @default(uuid()) @db.Uuid
+    created_at        DateTime            @default(now()) @db.Timestamp(6)
+    updated_at        DateTime            @updatedAt @db.Timestamp(6)
+    address           String              @db.VarChar(255)
+    type_of_contract  CONTRACT_TYPE       @default(INDEFINIDO)
+    assignments       String              @db.VarChar(255)
+    net_salary        Decimal             @db.Money
+    afp               AFP_TYPE            @default(AFP_CAPITAL)
+    family_burdens    Int
+    sistema_salud     HEALTHCARE_SYSTEM   @default(FONASA)
+    bank_id           String              @default(uuid()) @db.Uuid
+    account_type      String              @db.VarChar(255)
+    account_number    String              @db.VarChar(255)
+    user_id           String              @default(uuid()) @db.Uuid
+    company_employee  company_employee[]
+    user              user                @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    employee_requests employee_requests[]
+
+    @@index([company_id])
+    @@index([user_id])
+    @@index([bank_id])
+    @@index([type_of_contract])
+    @@index([afp])
+    @@index([sistema_salud])
+    @@index([created_at])
+    @@index([company_id, type_of_contract])
+    @@index([afp, sistema_salud])
+}
+
+model employee_requests {
+    id          String                 @id @default(uuid()) @db.Uuid
+    company_id  String                 @default(uuid()) @db.Uuid
+    employee_id String                 @default(uuid()) @db.Uuid
+    status      EMPLOYE_REQUEST_STATUS @default(PENDING)
+    created_at  String                 @db.VarChar(255)
+    updatet_at  String                 @db.VarChar(255)
+    company     company                @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    employee    employee               @relation(fields: [employee_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    @@index([company_id])
+    @@index([employee_id])
+    @@index([status])
+    @@index([company_id, status])
+    @@index([employee_id, status])
+}
+
+enum EMPLOYE_REQUEST_STATUS {
+    PENDING
+    APPROVED
+    REJECTED
+}
+
+model request_type {
+    id             String           @id @default(uuid()) @db.Uuid
+    name           String           @db.VarChar(255)
+    description    String           @db.VarChar(255)
+    is_active      Boolean
+    created_at     DateTime         @default(now()) @db.Timestamp(6)
+    updated_at     DateTime         @updatedAt @db.Timestamp(6)
+    client_request client_request[]
+
+    @@index([name])
+    @@index([is_active])
+    @@index([is_active, name])
+}
+
+model rh_document {
+    id          String  @id @default(uuid()) @db.Uuid
+    name        String  @db.VarChar(255)
+    company_id  String  @default(uuid()) @db.Uuid
+    category_id String  @default(uuid()) @db.Uuid
+    user_id     String  @default(uuid()) @db.Uuid
+    type        String  @db.VarChar(255)
+    size        Decimal @db.Decimal
+    company     company @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    user        user    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    @@index([company_id])
+    @@index([category_id])
+    @@index([user_id])
+    @@index([type])
+    @@index([name])
+    @@index([company_id, category_id])
+    @@index([user_id, type])
+}
+
+// Esta tabla contiene los roles de usuario
+model role {
+    id          String    @id @default(uuid()) @db.Uuid
+    name        String    @unique @db.VarChar(50)
+    description String    @db.VarChar(255)
+    created_at  DateTime  @default(now()) @db.Timestamp(6)
+    updated_at  DateTime  @updatedAt @db.Timestamp(6)
+    role_name   ROLE_NAME
+    users       user[]
+
+    @@index([name])
+    @@index([created_at])
+}
+
+enum ROLE_NAME {
+    ADMIN
+    CLIENT
+    SUPER_ADMIN
+}
+
+// Esta tabla contiene los módulos de la aplicación
+model module {
+    id          String   @id @default(uuid()) @db.Uuid
+    code        String   @unique @db.VarChar(50)
+    name        String   @unique @db.VarChar(50)
+    description String   @db.VarChar(255)
+    is_active   Boolean  @default(true)
+    created_at  DateTime @default(now()) @db.Timestamp(6)
+    updated_at  DateTime @updatedAt @db.Timestamp(6)
+
+    user_module_permission user_module_permission[]
+
+    @@index([name])
+    @@index([code])
+    @@index([is_active])
+    @@index([created_at])
+}
+
+// Esta tabla contiene los permisos de los usuarios por módulo
+model user_module_permission {
+    id         String   @id @default(uuid()) @db.Uuid
+    created_at DateTime @default(now()) @db.Timestamp(6)
+    updated_at DateTime @updatedAt @db.Timestamp(6)
+
+    user_id String @db.Uuid
+    user    user   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    module_id String @db.Uuid
+    module    module @relation(fields: [module_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+    is_active Boolean @default(true)
+
+    can_create Boolean @default(true)
+    can_read   Boolean @default(true)
+    can_update Boolean @default(true)
+    can_delete Boolean @default(true)
+
+    @@unique([user_id, module_id])
+    @@index([user_id])
+    @@index([module_id])
+}
+
+model user {
+    id                     String                   @id @default(uuid()) @db.Uuid
+    email                  String                   @unique @db.VarChar(255)
+    password               String?                  @db.VarChar(255)
+    is_active              Boolean                  @default(true)
+    rut                    String                   @unique @db.VarChar(15)
+    last_connection        DateTime?                @db.Timestamp(6)
+    token                  String?                  @db.VarChar(255)
+    created_at             DateTime                 @default(now()) @db.Timestamp(6)
+    updated_at             DateTime                 @updatedAt @db.Timestamp(6)
+    role_id                String                   @default(uuid()) @db.Uuid
+    first_name             String                   @db.VarChar(100)
+    last_name              String                   @db.VarChar(100)
+    phone                  String                   @db.VarChar(20)
+    client_request         client_request[]
+    employee               employee[]
+    rh_document            rh_document[]
+    role                   role                     @relation(fields: [role_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+    user_module_permission user_module_permission[]
+
+    @@index([email])
+    @@index([rut])
+    @@index([is_active])
+    @@index([role_id])
+    @@index([last_connection])
+    @@index([created_at])
+    @@index([is_active, role_id])
+}
+
+enum CONTRACT_TYPE {
+    INDEFINIDO
+    PLAZO_FIJO
+    POR_OBRA
+    HONORARIOS
+    PRACTICA
+}
+
+enum AFP_TYPE {
+    AFP_CAPITAL
+    AFP_CUPRUM
+    AFP_HABITAT
+    AFP_PLANVITAL
+    AFP_PROVIDA
+    AFP_MODELO
+    AFP_UNO
+}
+
+enum HEALTHCARE_SYSTEM {
+    FONASA
+    ISAPRE
+}

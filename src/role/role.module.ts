@@ -1,0 +1,14 @@
+// Third-party imports
+import { Module } from '@nestjs/common';
+
+// Local imports
+import { RoleService } from './role.service';
+import { RoleController } from './role.controller';
+import { PrismaModule } from 'src/prisma/prisma.module';
+
+@Module({
+  controllers: [RoleController],
+  providers: [RoleService],
+  imports: [PrismaModule]
+})
+export class RoleModule { }
