@@ -13,6 +13,7 @@ export interface EnvVariables {
     DATABASE_URL: string;
     JWT_SECRET: string;
     JWT_EXPIRES_IN?: string;
+    FRONTEND_URL: string;
 }
 
 class EnvironmentConfig {
@@ -35,6 +36,10 @@ class EnvironmentConfig {
     @IsOptional()
     @IsString()
     JWT_EXPIRES_IN?: string;
+
+    @IsString()
+    @IsNotEmpty()
+    FRONTEND_URL: string;
 }
 
 export const validate = (config: Record<string, unknown>) => {

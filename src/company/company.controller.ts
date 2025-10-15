@@ -4,6 +4,7 @@ import { CompanyService } from './company.service';
 
 // Local imports
 import { CreateCompanyDto } from './dto/create-company.dto';
+import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 
@@ -14,6 +15,27 @@ export class CompanyController {
   @Post()
   create(@Body() createCompanyDto: CreateCompanyDto) {
     return this.companyService.create(createCompanyDto);
+  }
+
+  /**
+   * POST /company/client
+   * Crear un nuevo cliente (usuario + empresa)
+   */
+  @Post('client')
+  createClient(@Body() createClientDto: CreateClientDto) {
+    return this.companyService.createClient(createClientDto);
+  }
+
+  /**
+   * GET /company/clients
+   * Obtener lista de clientes con información detallada
+   */
+  @Get('clients')
+  async findAllClients(
+    @Query() paginationDto: PaginationDto,
+    @Query('search') search?: string
+  ) {
+    return this.companyService.findAllClients(paginationDto, search);
   }
 
   @Get()

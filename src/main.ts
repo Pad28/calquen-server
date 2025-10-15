@@ -7,13 +7,6 @@ import { ValidationPipe, VersioningType } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Habilitar CORS para permitir peticiones desde el frontend
-  // TODO: verifocar configuracion del cors
-  app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-    credentials: true,
-  });
-
   app.setGlobalPrefix('api');
 
   app.enableVersioning({
@@ -31,6 +24,11 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService<EnvVariables>);
   const port = configService.get('PORT')
+
+  app.enableCors({
+    origin: configService.get('FRONTEND_URL'),
+    credentials: true,
+  });
   await app.listen(port, () => console.log(`Server is running on port ${port}`));
 }
 bootstrap();
